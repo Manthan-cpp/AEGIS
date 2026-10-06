@@ -121,3 +121,17 @@ Phase 8 UI polish and accessibility.
 - `frontend/app/(main)/health-flow.tsx` provides the health chat UI. Offline
 - The health chat labels the actual provider used, so the user can distinguish
   Gemini, online fallback, and offline Ollama responses.
+
+## Live SerpAPI Web Grounding Architecture
+
+- `backend/services/serpapi_client.py` provides targeted, privacy-preserving live official web search grounding across all three assistants:
+  - **Legal Rights Assistant**: Live directory lookup for DLSA, SLSA, Protection Officers, Taluka committees, and official court portals (`pune.dcourts.gov.in`, `nalsa.gov.in`).
+  - **AI Emotional Companion**: Crisis safe havens, Sakhi One Stop Centres (OSCs), Swadhar Greh shelter homes, Tele-MANAS (14416), and National Women Helpline (181).
+  - **Intimate Health Assistant**: Verified Primary Health Centres (PHCs), Community Health Centres (CHCs), Jan Aushadhi Kendras (PMBJK), Suvidha subsidized sanitary pads, and ICTC/NACO STI testing centers.
+- **Privacy & PII Sanitizer**: Automatically strips Indian Aadhaar numbers (`\d{4}[\s-]?\d{4}[\s-]?\d{4}`), 10-12 digit phone numbers, email addresses, street addresses, and normalizes Hindi/Hinglish distress cries (`mera pati maarta hai`, `sasural wale`, `bachao`, `madad karo`) into topic searches before query formulation.
+- **Circuit Breaker & Resilience**:
+  - Automatically trips after 3 consecutive remote failures (timeouts or HTTP 429/5xx), pausing remote calls for 60 seconds.
+  - Ensures a guaranteed 0ms instantaneous fallback to offline/vector RAG without frontend disruption or hanging requests.
+  - Recovers automatically via half-open probe upon cooldown expiry.
+- **Bounded In-Memory Caching**: Caches search queries for 1 hour TTL with bounded LRU eviction (max 500 entries) to conserve API quotas and optimize latency.
+

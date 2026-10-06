@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import Image from "next/image";
+import { ArrowLeft, ArrowRight, Check, Download, Send, Share2 } from "lucide-react";
 import { canShareSOSImage, canShareSOSMessage, shareSOSImage, shareSOSMessage } from "./sos-share";
 
 type SOSFlowProps = {
@@ -145,7 +146,8 @@ export default function SosFlow({ onBack }: SOSFlowProps) {
   return (
     <section className="sos-flow" aria-labelledby="sos-title">
       <button className="back-link" type="button" onClick={onBack}>
-        <span aria-hidden="true">←</span> Back to toolkit
+        <ArrowLeft size={14} aria-hidden="true" />
+        <span>Back to toolkit</span>
       </button>
 
       <div className="sos-heading">
@@ -203,7 +205,7 @@ export default function SosFlow({ onBack }: SOSFlowProps) {
 
         <button className="sos-generate-button" type="submit" disabled={isGenerating || !keywords.trim()}>
           {isGenerating ? "Preparing your image..." : "Create discreet image"}
-          {!isGenerating && <span aria-hidden="true">→</span>}
+          {!isGenerating && <ArrowRight size={14} aria-hidden="true" />}
         </button>
       </form>
 
@@ -216,7 +218,9 @@ export default function SosFlow({ onBack }: SOSFlowProps) {
               <p className="eyebrow">Ready to share</p>
               <h3 id="sos-result-title">Your message is hidden.</h3>
             </div>
-            <span className="sos-success-mark" aria-hidden="true">✓</span>
+            <span className="sos-success-mark" aria-hidden="true">
+              <Check size={16} />
+            </span>
           </div>
 
           <div className="sos-result-grid">
@@ -248,11 +252,17 @@ export default function SosFlow({ onBack }: SOSFlowProps) {
                 <span>{customMessage.length}/500</span>
               </div>
               <div className="sos-actions">
-                <button className="sos-secondary-button" type="button" onClick={saveImage}>Save image</button>
-                <button className="sos-secondary-button" type="button" onClick={sendViaSMS}>Share</button>
-                <button className="sos-primary-button" type="button" onClick={sendViaSMS}>Send via SMS</button>
+                <button className="sos-secondary-button" type="button" onClick={saveImage}>
+                  <Download size={13} aria-hidden="true" /> Save image
+                </button>
+                <button className="sos-secondary-button" type="button" onClick={sendViaSMS}>
+                  <Share2 size={13} aria-hidden="true" /> Share
+                </button>
+                <button className="sos-primary-button" type="button" onClick={sendViaSMS}>
+                  <Send size={13} aria-hidden="true" /> Send via SMS
+                </button>
                 <button className="sos-primary-button" type="button" onClick={sendCustomMessage} disabled={!customMessage.trim()}>
-                  Send custom message
+                  <Send size={13} aria-hidden="true" /> Send custom message
                 </button>
               </div>
               <p className="sos-share-support-note">

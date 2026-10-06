@@ -13,6 +13,14 @@ from typing import Any
 from pymongo import MongoClient
 from pymongo.errors import PyMongoError
 
+from services.serpapi_client import (
+    is_legal_web_candidate,
+    legal_web_results_to_chunks,
+    search_legal_web,
+    serpapi_enabled,
+)
+
+
 
 MODEL_NAME = os.getenv("LEGAL_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
 LEGAL_COLLECTION = "legal_corpus_chunks"
@@ -247,12 +255,20 @@ def _local_keyword_score(query: str, chunk: LegalChunk) -> float:
         score += 0.35
     if query_terms & {"protection", "residence", "order", "magistrate"} and "domestic violence" in document:
         score += 0.2
+    confinement_query = bool(re.search(
+        r"\b(?:confine|confined|confinement|locked in|locked up|held in a room|hostage)\b",
+        query_text,
+    ))
+    justice_intent = bool(
+        re.search(r"\b(?:justice|legal|law|laws|protection|complaint|police|report|help|aid)\b", query_text)
+    )
     if query_terms & {"confine", "room", "days", "secret"} and "wrongful confinement" in document:
         score += 0.5
     if query_terms & {"confine", "room", "days", "secret"} and (
         "wrongful confinement" not in section and "domestic violence" not in document
     ):
-        score *= 0.35
+        if not (justice_intent and ("nalsa" in title or "legal services" in title or "bharatiya nagarik suraksha sanhita" in title)):
+            score *= 0.35
     if query_terms & {"verbal", "emotional", "abuse", "humiliation", "insult", "threat"} and (
         "domestic violence" in document or "verbal and emotional abuse" in document or "cruelty" in document
     ):
@@ -265,9 +281,6 @@ def _local_keyword_score(query: str, chunk: LegalChunk) -> float:
     mentions_historical = bool(re.search(r"\b(?:ipc|indian penal code|old law|before 2024)\b", query_text))
     sexual_query = bool(query_terms & {"sexual", "rape"}) or bool(
         re.search(r"\b(?:sexual assault|sexual abuse|sexually assaulted|sexually abused|rape|raped)\b", query_text)
-    )
-    justice_intent = bool(
-        re.search(r"\b(?:justice|legal|law|laws|protection|complaint|police|report|help|aid)\b", query_text)
     )
     kidnapping_query = bool(re.search(
         r"\b(?:kidnap(?:ping|ped)?|abduct(?:ed|ion|ing)?|held against my will|taken by force)\b",
@@ -301,11 +314,12 @@ def _local_keyword_score(query: str, chunk: LegalChunk) -> float:
         domestic_sections = ("section 85", "section 86")
         if not section.startswith(sexual_sections) and not (query_terms & {"husband", "partner", "domestic"} and section.startswith(domestic_sections)):
             score *= 0.25
-    if sexual_query and justice_intent and ("nalsa" in title or "legal services" in title):
-        score = max(score, 0.55)
-    if sexual_query and justice_intent and "bharatiya nagarik suraksha sanhita" in title:
-        if section.startswith(("section 173", "section 175", "section 176", "section 183", "section 184", "section 193")):
-            score = max(score, 0.5)
+    if (sexual_query or kidnapping_query or physical_assault_query or confinement_query) and justice_intent:
+        if "nalsa" in title or "legal services" in title:
+            score = max(score, 0.65)
+        if "bharatiya nagarik suraksha sanhita" in title:
+            if section.startswith(("section 173", "section 175", "section 176", "section 183", "section 184", "section 193")):
+                score = max(score, 0.60)
     if kidnapping_query:
         if "bharatiya nyaya sanhita" in title:
             kidnapping_sections = ("section 137", "section 138", "section 140", "section 142")
@@ -375,6 +389,23 @@ def _search_local_corpus(query: str, limit: int) -> tuple[list[LegalChunk], str]
                 return 6 if re.search(r"\b(?:evidence|proof|message|recording|digital|electronic)\b", normalized) else 1
             if "protection of women from domestic violence" in title:
                 return 32
+
+        confinement_query = bool(re.search(
+            r"\b(?:confine|confined|confinement|locked in|locked up|held in a room|hostage)\b",
+            normalized,
+        ))
+        if confinement_query:
+            abuse_query = bool(re.search(r"\b(?:abuse|abused|verbal|emotional|cruelty|violence|beaten)\b", normalized))
+            if "bharatiya nyaya sanhita" in title and section_number == 127:
+                return 130
+            if "protection of women from domestic violence" in title:
+                if abuse_query:
+                    return {3: 125, 12: 122, 18: 120, 19: 118}.get(section_number, 50)
+                return {12: 112, 18: 110, 19: 108, 3: 106}.get(section_number, 30)
+            if "bharatiya nagarik suraksha sanhita" in title:
+                return {173: 118, 175: 114, 176: 112, 193: 110}.get(section_number, 20) if justice_intent else 20
+            if "nalsa" in title or "legal services" in title:
+                return 116 if justice_intent else 45
 
         # Sexual-violence questions need a stable, legally coherent set of
         # provisions. A vector result for “Section 63” from the evidence law
@@ -501,7 +532,7 @@ def _merge_local_grounding(query: str, atlas_chunks: list[LegalChunk], limit: in
     return combined[:limit]
 
 
-def search_legal_chunks(query: str, limit: int = 5) -> tuple[list[LegalChunk], str]:
+def _base_search_legal_chunks(query: str, limit: int = 5) -> tuple[list[LegalChunk], str]:
     """Search Atlas first, then the checked-in official corpus if needed."""
 
     # For high-stakes violence questions, prefer the checked-in official corpus.
@@ -574,6 +605,34 @@ def search_legal_chunks(query: str, limit: int = 5) -> tuple[list[LegalChunk], s
             reverse=True,
         )
         return [_as_chunk(document, score) for score, document in ranked[:limit]], "local-cosine"
+
+
+def search_legal_chunks(query: str, limit: int = 5) -> tuple[list[LegalChunk], str]:
+    """Search Atlas and official corpus, augmented with SerpAPI live web grounding."""
+    web_candidate = is_legal_web_candidate(query)
+    web_chunks: list[LegalChunk] = []
+    if web_candidate and serpapi_enabled():
+        web_results = search_legal_web(query, max_results=3)
+        web_chunks = legal_web_results_to_chunks(web_results)
+
+    base_chunks, source = _base_search_legal_chunks(query, limit)
+
+    if web_chunks:
+        combined = list(web_chunks)
+        existing_sections = {c.section.casefold() for c in web_chunks}
+        for chunk in base_chunks:
+            if chunk.section.casefold() not in existing_sections:
+                combined.append(chunk)
+        return combined[:limit], "serpapi-web"
+
+    # If base retrieval found no relevant provisions, try SerpAPI web retrieval as a live fallback
+    if serpapi_enabled() and not any(chunk_is_relevant(c) for c in base_chunks):
+        fallback_results = search_legal_web(query, max_results=limit)
+        fallback_chunks = legal_web_results_to_chunks(fallback_results)
+        if fallback_chunks:
+            return fallback_chunks, "serpapi-web"
+
+    return base_chunks, source
 
 
 def chunk_is_relevant(chunk: LegalChunk | None, threshold: float = 0.38) -> bool:

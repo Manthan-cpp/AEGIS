@@ -6,6 +6,8 @@ import {
   UserButton,
   useUser,
 } from "@clerk/nextjs";
+import { User, LogIn, UserPlus } from "lucide-react";
+import { PersonalDetailsForm } from "./personal-details";
 
 const clerkConfigured = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY);
 
@@ -18,7 +20,15 @@ function SignedInControls() {
     return (
       <div className="auth-user-control" aria-label="Your account">
         <span className="auth-user-label">Account</span>
-        <UserButton />
+        <UserButton>
+          <UserButton.UserProfilePage 
+            label="Personal Details" 
+            url="personal-details" 
+            labelIcon={<User size={16} />}
+          >
+            <PersonalDetailsForm />
+          </UserButton.UserProfilePage>
+        </UserButton>
       </div>
     );
   }
@@ -27,10 +37,16 @@ function SignedInControls() {
     <div className="auth-controls" aria-label="Account access">
       <span className="auth-guest-note">You can continue as a guest.</span>
       <SignInButton mode="modal">
-        <button className="auth-button auth-button-quiet" type="button">Sign in</button>
+        <button className="auth-button auth-button-quiet" type="button">
+          <LogIn size={13} aria-hidden="true" />
+          <span>Sign in</span>
+        </button>
       </SignInButton>
       <SignUpButton mode="modal">
-        <button className="auth-button auth-button-primary" type="button">Create account</button>
+        <button className="auth-button auth-button-primary" type="button">
+          <UserPlus size={13} aria-hidden="true" />
+          <span>Create account</span>
+        </button>
       </SignUpButton>
     </div>
   );

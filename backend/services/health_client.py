@@ -10,6 +10,13 @@ from groq import Groq
 
 from services.gemini_client import generate_gemini_text
 from services.ollama_client import generate_ollama_text, ollama_enabled
+from services.serpapi_client import (
+    format_health_facility_context,
+    is_health_facility_candidate,
+    search_health_facility_web,
+    serpapi_enabled,
+)
+
 
 
 DEFAULT_MODEL = "openai/gpt-oss-120b"
@@ -188,7 +195,21 @@ def generate_health_reply(message: str, history: list[dict[str, str]] | None = N
     """Use Gemini/Groq first, then Ollama only when online generation is unavailable."""
 
     recent_history = history or []
+    facility_context = ""
+    facility_results: list[Any] = []
+    if is_health_facility_candidate(message) and serpapi_enabled():
+        facility_results = search_health_facility_web(message, max_results=2)
+        if facility_results:
+            facility_context = format_health_facility_context(facility_results)
+
     prompt = _prompt(message, recent_history)
+    if facility_context:
+        prompt += (
+            f"\n\nVerified Public Health Resources / Facilities in India:\n{facility_context}\n"
+            "If relevant to the user's question, gently mention these verified Indian public health "
+            "resources (e.g. Jan Aushadhi Kendras, PHCs, or testing centres) and links. "
+            "Remind them to verify with a doctor."
+        )
     gemini_error: Exception | None = None
 
     if os.getenv("GEMINI_API_KEY", "").strip():
@@ -269,6 +290,9 @@ def generate_health_reply(message: str, history: list[dict[str, str]] | None = N
 
         fallback = _offline_symptom_fallback(message)
         if fallback:
+            if facility_results:
+                top = facility_results[0]
+                fallback += f"\n\nVerified public health resources: {top.title} ({top.link})."
             return HealthReply(
                 text=fallback,
                 source="context-guided",

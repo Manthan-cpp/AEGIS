@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { ArrowLeft, PhoneCall, PhoneOff } from "lucide-react";
 import { WebSession, type SessionStatus } from "@omnidim-ai/client";
 
 type TrustedCallerFlowProps = {
@@ -104,7 +105,8 @@ export default function TrustedCallerFlow({ onBack }: TrustedCallerFlowProps) {
   return (
     <section className="trusted-caller-flow" aria-labelledby="trusted-caller-title">
       <button className="back-link" type="button" onClick={onBack} disabled={isLive}>
-        <span aria-hidden="true">&larr;</span> Back to toolkit
+        <ArrowLeft size={14} aria-hidden="true" />
+        <span>Back to toolkit</span>
       </button>
 
       <div className="trusted-caller-heading">
@@ -113,7 +115,9 @@ export default function TrustedCallerFlow({ onBack }: TrustedCallerFlowProps) {
           <h2 id="trusted-caller-title">Reach someone you trust.</h2>
           <p>This opens a live browser voice session. It does not place a phone call and does not need a phone number.</p>
         </div>
-        <div className={`trusted-caller-orb${isLive ? " is-live" : ""}`} aria-hidden="true"><span /></div>
+        <div className={`trusted-caller-orb${isLive ? " is-live" : ""}`} aria-hidden="true">
+          <PhoneCall size={22} />
+        </div>
       </div>
 
       <form className="trusted-caller-panel" onSubmit={startCall}>
@@ -122,7 +126,12 @@ export default function TrustedCallerFlow({ onBack }: TrustedCallerFlowProps) {
             <span className={`companion-status-dot${isLive ? " is-live" : ""}`} aria-hidden="true" />
             {statusText(status)}
           </div>
-          {isLive && <button className="trusted-caller-end" type="button" onClick={endCall}>End call</button>}
+          {isLive && (
+            <button className="trusted-caller-end" type="button" onClick={endCall}>
+              <PhoneOff size={13} aria-hidden="true" />
+              <span>End call</span>
+            </button>
+          )}
         </div>
 
         <div className="trusted-caller-form-grid">
@@ -151,7 +160,7 @@ export default function TrustedCallerFlow({ onBack }: TrustedCallerFlowProps) {
         <div className="trusted-caller-actions">
           <button className="trusted-caller-start" type="submit" disabled={!userName.trim() || isBusy || isLive}>
             {isBusy ? "Starting voice session..." : isLive ? "Call in progress" : "Start browser voice call"}
-            {!isBusy && !isLive && <span aria-hidden="true">&rarr;</span>}
+            {!isBusy && !isLive && <PhoneCall size={14} aria-hidden="true" />}
           </button>
         </div>
         <p className="trusted-caller-note">Aegis is not an emergency service. Browser voice calls require an internet connection and microphone permission.</p>

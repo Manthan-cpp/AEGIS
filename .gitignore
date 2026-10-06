@@ -28,3 +28,4 @@ env/
 # Large / Backup files
 *.bak
 *.orig
+plan.md

@@ -12,7 +12,26 @@ import SosFlow from "./sos-flow";
 import TrustedCallerFlow from "./trusted-caller-flow";
 import DirectMessagesFlow from "./direct-messages-flow";
 import MotionProvider from "../../components/motion/motion-provider";
-import { TextReveal } from "../../components/motion/reveal";
+import { WordReveal } from "../../components/motion/reveal";
+import { BreathingGuide } from "../../components/motion/breathing-guide";
+import {
+  Home,
+  MessageSquareHeart,
+  Sparkles,
+  Scale,
+  HeartPulse,
+  ShieldAlert,
+  Send,
+  KeyRound,
+  MessageCircle,
+  PhoneCall,
+  Mail,
+  ChevronDown,
+  ChevronUp,
+  ArrowUpRight,
+  ArrowRight,
+  Wind,
+} from "lucide-react";
 
 type MainAppProps = {
   onPanicExit: () => void;
@@ -35,6 +54,7 @@ export default function MainApp({ onPanicExit }: MainAppProps) {
   const [activeTool, setActiveTool] = useState<ToolId>("home");
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [expandedGroup, setExpandedGroup] = useState<NavGroup>(null);
+  const [showBreathing, setShowBreathing] = useState(false);
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
@@ -94,38 +114,38 @@ export default function MainApp({ onPanicExit }: MainAppProps) {
 
             <div className="aegis-nav-list">
               <button className={`aegis-nav-button${activeTool === "home" ? " is-active" : ""}`} type="button" onClick={() => goTo("home")}>
-                <span><small>01</small> Home</span><b aria-hidden="true">↗</b>
+                <span><span className="nav-item-icon-box"><Home size={15} /></span> Home</span><b aria-hidden="true"><ArrowUpRight size={15} /></b>
               </button>
 
               <div className={`aegis-nav-group${expandedGroup === "chatbots" ? " is-expanded" : ""}`}>
                 <button className="aegis-nav-button aegis-nav-group-button" type="button" onClick={() => toggleGroup("chatbots")} aria-expanded={expandedGroup === "chatbots"} aria-controls="chatbot-submenu">
-                  <span><small>02</small> Chatbots</span><b aria-hidden="true">{expandedGroup === "chatbots" ? "−" : "+"}</b>
+                  <span><span className="nav-item-icon-box"><MessageSquareHeart size={15} /></span> Chatbots</span><b aria-hidden="true">{expandedGroup === "chatbots" ? <ChevronUp size={15} /> : <ChevronDown size={15} />}</b>
                 </button>
                 <div id="chatbot-submenu" className="aegis-nav-submenu" aria-hidden={expandedGroup !== "chatbots"}>
-                  <button className={`aegis-nav-subbutton${activeTool === "companion" ? " is-active" : ""}`} type="button" onClick={() => goTo("companion")}><span className="nav-sub-icon">✦</span> Emotional support</button>
-                  <button className={`aegis-nav-subbutton${activeTool === "legal" ? " is-active" : ""}`} type="button" onClick={() => goTo("legal")}><span className="nav-sub-icon">§</span> Legal support</button>
-                  <button className={`aegis-nav-subbutton${activeTool === "health" ? " is-active" : ""}`} type="button" onClick={() => goTo("health")}><span className="nav-sub-icon">＋</span> Health support</button>
+                  <button className={`aegis-nav-subbutton${activeTool === "companion" ? " is-active" : ""}`} type="button" onClick={() => goTo("companion")}><span className="nav-sub-icon"><Sparkles size={14} /></span> Emotional support</button>
+                  <button className={`aegis-nav-subbutton${activeTool === "legal" ? " is-active" : ""}`} type="button" onClick={() => goTo("legal")}><span className="nav-sub-icon"><Scale size={14} /></span> Legal support</button>
+                  <button className={`aegis-nav-subbutton${activeTool === "health" ? " is-active" : ""}`} type="button" onClick={() => goTo("health")}><span className="nav-sub-icon"><HeartPulse size={14} /></span> Health support</button>
                 </div>
               </div>
 
               <div className={`aegis-nav-group${expandedGroup === "sos" ? " is-expanded" : ""}`}>
                 <button className="aegis-nav-button aegis-nav-group-button is-sos" type="button" onClick={() => toggleGroup("sos")} aria-expanded={expandedGroup === "sos"} aria-controls="sos-submenu">
-                  <span><small>03</small> SOS</span><b aria-hidden="true">{expandedGroup === "sos" ? "−" : "+"}</b>
+                  <span><span className="nav-item-icon-box"><ShieldAlert size={15} /></span> SOS</span><b aria-hidden="true">{expandedGroup === "sos" ? <ChevronUp size={15} /> : <ChevronDown size={15} />}</b>
                 </button>
                 <div id="sos-submenu" className="aegis-nav-submenu" aria-hidden={expandedGroup !== "sos"}>
-                  <button className={`aegis-nav-subbutton${activeTool === "sos" ? " is-active" : ""}`} type="button" onClick={() => goTo("sos")}><span className="nav-sub-icon">♡</span> Send SOS message</button>
-                  <button className={`aegis-nav-subbutton${activeTool === "responder" ? " is-active" : ""}`} type="button" onClick={() => goTo("responder")}><span className="nav-sub-icon">↗</span> Decode an SOS message</button>
+                  <button className={`aegis-nav-subbutton${activeTool === "sos" ? " is-active" : ""}`} type="button" onClick={() => goTo("sos")}><span className="nav-sub-icon"><Send size={14} /></span> Send SOS message</button>
+                  <button className={`aegis-nav-subbutton${activeTool === "responder" ? " is-active" : ""}`} type="button" onClick={() => goTo("responder")}><span className="nav-sub-icon"><KeyRound size={14} /></span> Decode an SOS message</button>
                 </div>
               </div>
 
               <button className={`aegis-nav-button${activeTool === "messages" ? " is-active" : ""}`} type="button" onClick={() => goTo("messages")}>
-                <span><small>04</small> Private messages</span><b aria-hidden="true">↗</b>
+                <span><span className="nav-item-icon-box"><MessageCircle size={15} /></span> Private messages</span><b aria-hidden="true"><ArrowUpRight size={15} /></b>
               </button>
               <button className={`aegis-nav-button${activeTool === "caller" ? " is-active" : ""}`} type="button" onClick={() => goTo("caller")}>
-                <span><small>05</small> Call a trusted person</span><b aria-hidden="true">↗</b>
+                <span><span className="nav-item-icon-box"><PhoneCall size={15} /></span> Call a trusted person</span><b aria-hidden="true"><ArrowUpRight size={15} /></b>
               </button>
               <button className={`aegis-nav-button${activeTool === "email" ? " is-active" : ""}`} type="button" onClick={() => goTo("email")}>
-                <span><small>06</small> Email support</span><b aria-hidden="true">↗</b>
+                <span><span className="nav-item-icon-box"><Mail size={15} /></span> Email support</span><b aria-hidden="true"><ArrowUpRight size={15} /></b>
               </button>
             </div>
 
@@ -157,10 +177,15 @@ export default function MainApp({ onPanicExit }: MainAppProps) {
               <section className="landing-hero" aria-labelledby="landing-title">
                 <div className="landing-hero-copy" data-motion-intro id="landing-title">
                   <p className="eyebrow">A private place to begin again</p>
-                  <TextReveal as="h2" className="aegis-hero-title">When the world feels unsafe,<br /><em>you still deserve a quiet place.</em></TextReveal>
+                  <WordReveal as="h2" className="aegis-hero-title" text="When the world feels unsafe, you still deserve a quiet place." />
                   <p className="landing-hero-lede">Aegis brings calm conversation, clear rights information, and discreet ways to reach someone you trust into one gentle space.</p>
                   <div className="landing-hero-actions">
-                    <button className="landing-primary-button" type="button" onClick={() => goTo("companion")}>Start with support <span aria-hidden="true">→</span></button>
+                    <button className="landing-primary-button" type="button" onClick={() => goTo("companion")}>
+                      Start with support <ArrowRight size={14} aria-hidden="true" />
+                    </button>
+                    <button className="landing-secondary-button" type="button" onClick={() => setShowBreathing(true)}>
+                      <span className="breathing-pill-dot" /> Follow breathing guide <Wind size={13} aria-hidden="true" />
+                    </button>
                   </div>
                 </div>
                 <div className="landing-hero-art" aria-label="A calm Aegis presence">
@@ -190,22 +215,61 @@ export default function MainApp({ onPanicExit }: MainAppProps) {
                   <p>Every feature has one purpose: to make information, connection, and choice feel a little closer.</p>
                 </div>
                 <div className="landing-feature-list">
-                  <button className="landing-feature-row" type="button" onClick={() => goTo("companion")}><span>01</span><strong>Emotional support</strong><p>A natural conversation when you need someone to listen.</p><b aria-hidden="true">↗</b></button>
-                  <button className="landing-feature-row" type="button" onClick={() => goTo("legal")}><span>02</span><strong>Legal clarity</strong><p>India-scoped answers grounded in official sources and sections.</p><b aria-hidden="true">↗</b></button>
-                  <button className="landing-feature-row" type="button" onClick={() => goTo("sos")}><span>03</span><strong>Discreet SOS</strong><p>A hidden message inside an ordinary-looking image.</p><b aria-hidden="true">↗</b></button>
-                  <button className="landing-feature-row" type="button" onClick={() => goTo("caller")}><span>04</span><strong>Trusted connection</strong><p>Reach someone through a live voice bridge or queued help email.</p><b aria-hidden="true">↗</b></button>
-                  <button className="landing-feature-row" type="button" onClick={() => goTo("messages")}><span>05</span><strong>Private messages</strong><p>A quiet line to another signed-in Aegis user, with history preserved.</p><b aria-hidden="true">↗</b></button>
+                  <button className="landing-feature-row" type="button" onClick={() => goTo("companion")}>
+                    <div className="feature-icon-box feature-icon-peach"><Sparkles size={20} /></div>
+                    <strong>Emotional support</strong>
+                    <p>A natural conversation when you need someone to listen.</p>
+                    <b aria-hidden="true"><ArrowUpRight size={18} /></b>
+                  </button>
+                  <button className="landing-feature-row" type="button" onClick={() => goTo("legal")}>
+                    <div className="feature-icon-box feature-icon-lavender"><Scale size={20} /></div>
+                    <strong>Legal clarity</strong>
+                    <p>India-scoped answers grounded in official sources and sections.</p>
+                    <b aria-hidden="true"><ArrowUpRight size={18} /></b>
+                  </button>
+                  <button className="landing-feature-row" type="button" onClick={() => goTo("health")}>
+                    <div className="feature-icon-box feature-icon-sage"><HeartPulse size={20} /></div>
+                    <strong>Health guidance</strong>
+                    <p>Private, judgment-free answers for intimate health questions.</p>
+                    <b aria-hidden="true"><ArrowUpRight size={18} /></b>
+                  </button>
+                  <button className="landing-feature-row" type="button" onClick={() => goTo("sos")}>
+                    <div className="feature-icon-box feature-icon-rose"><ShieldAlert size={20} /></div>
+                    <strong>Discreet SOS</strong>
+                    <p>A hidden message inside an ordinary-looking image.</p>
+                    <b aria-hidden="true"><ArrowUpRight size={18} /></b>
+                  </button>
+                  <button className="landing-feature-row" type="button" onClick={() => goTo("caller")}>
+                    <div className="feature-icon-box feature-icon-blue"><PhoneCall size={20} /></div>
+                    <strong>Trusted connection</strong>
+                    <p>Reach someone through a live voice bridge or queued help email.</p>
+                    <b aria-hidden="true"><ArrowUpRight size={18} /></b>
+                  </button>
+                  <button className="landing-feature-row" type="button" onClick={() => goTo("messages")}>
+                    <div className="feature-icon-box feature-icon-blue"><MessageCircle size={20} /></div>
+                    <strong>Private messages</strong>
+                    <p>A quiet line to another signed-in Aegis user, with history preserved.</p>
+                    <b aria-hidden="true"><ArrowUpRight size={18} /></b>
+                  </button>
                 </div>
               </section>
 
               <section className="landing-closing" aria-label="Aegis closing message">
                 <p className="eyebrow">Your pace. Your choice.</p>
                 <h3>You do not have to<br /><em>figure everything out at once.</em></h3>
-                <button className="landing-primary-button" type="button" onClick={() => goTo("companion")}>Open your private space <span aria-hidden="true">→</span></button>
+                <button className="landing-primary-button" type="button" onClick={() => goTo("companion")}>
+                  Open your private space <ArrowRight size={14} aria-hidden="true" />
+                </button>
               </section>
             </div>
           )}
         </section>
+
+        {showBreathing && (
+          <div className="aegis-breathing-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) setShowBreathing(false); }}>
+            <BreathingGuide onClose={() => setShowBreathing(false)} variant="inline" />
+          </div>
+        )}
       </main>
     </MotionProvider>
   );

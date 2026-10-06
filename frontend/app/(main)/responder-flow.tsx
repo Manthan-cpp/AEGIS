@@ -1,6 +1,7 @@
 "use client";
 
 import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, Inbox, Trash2, Upload } from "lucide-react";
 
 type ResponderFlowProps = {
   onBack: () => void;
@@ -150,7 +151,8 @@ export default function ResponderFlow({ onBack }: ResponderFlowProps) {
   return (
     <section className="responder-flow" aria-labelledby="responder-title">
       <button className="back-link" type="button" onClick={onBack}>
-        <span aria-hidden="true">&larr;</span> Back to toolkit
+        <ArrowLeft size={14} aria-hidden="true" />
+        <span>Back to toolkit</span>
       </button>
 
       <div className="responder-heading">
@@ -168,13 +170,13 @@ export default function ResponderFlow({ onBack }: ResponderFlowProps) {
           <p className="responder-helper">Use the exact PNG shared by the sender. Screenshots and JPEGs cannot reveal the hidden message.</p>
           <label className={`responder-file-picker${file ? " has-file" : ""}`}>
             <input ref={fileInput} type="file" accept="image/png" onChange={chooseFile} />
-            <span className="responder-file-icon" aria-hidden="true">↑</span>
+            <span className="responder-file-icon" aria-hidden="true"><Upload size={18} /></span>
             <strong>{file ? file.name : "Choose the original PNG"}</strong>
             <small>{file ? `${Math.round(file.size / 1024)} KB ready to decode` : "PNG files only"}</small>
           </label>
           <button className="responder-primary-button" type="submit" disabled={!file || isDecoding}>
             {isDecoding ? "Reading hidden message..." : "Decode image"}
-            {!isDecoding && <span aria-hidden="true">&rarr;</span>}
+            {!isDecoding && <ArrowRight size={14} aria-hidden="true" />}
           </button>
         </form>
 
@@ -218,7 +220,10 @@ export default function ResponderFlow({ onBack }: ResponderFlowProps) {
           <span className="case-storage-badge">{storage === "mongo" ? "MongoDB" : storage === "local-demo" ? "Local storage" : "Loading"}</span>
         </div>
         {cases.length === 0 ? (
-          <div className="empty-cases"><span aria-hidden="true">◇</span><p>No responder cases yet. Decoded signals will appear here.</p></div>
+          <div className="empty-cases">
+            <Inbox size={22} aria-hidden="true" />
+            <p>No responder cases yet. Decoded signals will appear here.</p>
+          </div>
         ) : (
           <div className="case-list">
             {cases.map((item) => (
@@ -226,7 +231,8 @@ export default function ResponderFlow({ onBack }: ResponderFlowProps) {
                 <span className={`severity-dot severity-dot-${item.severity}`} aria-label={`${item.severity} urgency`} />
                 <div className="case-row-content"><div className="case-row-topline"><strong>{item.severity} urgency</strong><time dateTime={item.created_at}>{formatTime(item.created_at)}</time></div><p>{item.message}</p><small>{item.filename ?? "Aegis SOS image"}</small></div>
                 <button className="case-remove-button" type="button" onClick={() => void removeCase(item.case_id)} disabled={removingCaseId === item.case_id} aria-label={`Remove ${item.severity} urgency responder case`}>
-                  {removingCaseId === item.case_id ? "Removing..." : "Remove"}
+                  <Trash2 size={12} aria-hidden="true" />
+                  <span>{removingCaseId === item.case_id ? "Removing..." : "Remove"}</span>
                 </button>
               </article>
             ))}

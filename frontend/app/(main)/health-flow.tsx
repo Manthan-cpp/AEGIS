@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { ArrowLeft, HeartPulse, Send, ShieldCheck } from "lucide-react";
 
 type HealthFlowProps = {
   onBack: () => void;
@@ -31,6 +32,13 @@ const starterMessage: ChatMessage = {
   role: "assistant",
   text: "Ask me directly about your body, sex, periods, contraception, pregnancy, symptoms, or anything intimate. I’ll answer plainly and without judgment.",
 };
+
+const healthQuickQuestions = [
+  "Are emergency contraceptives safe to take?",
+  "How to find nearest Jan Aushadhi Kendra?",
+  "What helps with extreme menstrual cramps?",
+  "Private STI testing options in India",
+];
 
 function newMessageId() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -91,7 +99,8 @@ export default function HealthFlow({ onBack }: HealthFlowProps) {
   return (
     <section className="health-flow" aria-labelledby="health-title">
       <button className="back-link" type="button" onClick={onBack}>
-        <span aria-hidden="true">&larr;</span> Back to toolkit
+        <ArrowLeft size={14} aria-hidden="true" />
+        <span>Back to toolkit</span>
       </button>
 
       <div className="health-heading">
@@ -100,7 +109,9 @@ export default function HealthFlow({ onBack }: HealthFlowProps) {
           <h2 id="health-title">Ask without embarrassment.</h2>
           <p>Direct, private health information for intimate questions, symptoms, and everyday decisions.</p>
         </div>
-        <div className="health-seal" aria-hidden="true">✚</div>
+        <div className="health-seal" aria-hidden="true">
+          <HeartPulse size={22} />
+        </div>
       </div>
 
       <aside className="health-boundary" role="note">
@@ -111,13 +122,19 @@ export default function HealthFlow({ onBack }: HealthFlowProps) {
       <section className="health-panel" aria-label="Conversation with Aegis Health">
         <div className="health-panel-topbar">
           <div className="health-status"><span className="health-status-dot" aria-hidden="true" /> Online first · offline fallback</div>
-          <span className="health-scope-badge">Judgment-free</span>
+          <span className="health-scope-badge">
+            <ShieldCheck size={12} aria-hidden="true" /> Judgment-free
+          </span>
         </div>
 
         <div className="health-messages" ref={messageList} data-lenis-prevent aria-live="polite">
           {messages.map((message) => (
             <div className={`chat-row chat-row-${message.role}`} key={message.id}>
-              {message.role === "assistant" && <span className="chat-avatar health-chat-avatar" aria-hidden="true">+</span>}
+              {message.role === "assistant" && (
+                <span className="chat-avatar health-chat-avatar" aria-hidden="true">
+                  <HeartPulse size={14} />
+                </span>
+              )}
               <div className={`chat-bubble chat-bubble-${message.role} health-chat-bubble`}>
                 <p>{message.text}</p>
                 {message.source && (
@@ -130,11 +147,28 @@ export default function HealthFlow({ onBack }: HealthFlowProps) {
           ))}
           {isSending && (
             <div className="chat-row chat-row-assistant" aria-label="Aegis Health is thinking">
-              <span className="chat-avatar health-chat-avatar" aria-hidden="true">+</span>
+              <span className="chat-avatar health-chat-avatar" aria-hidden="true">
+                <HeartPulse size={14} />
+              </span>
               <div className="chat-bubble chat-bubble-assistant chat-typing"><span /><span /><span /></div>
             </div>
           )}
         </div>
+
+        {messages.length === 1 && (
+          <div className="question-chips-container" aria-label="Suggested health questions">
+            {healthQuickQuestions.map((q) => (
+              <button
+                type="button"
+                className="question-chip-pill"
+                key={q}
+                onClick={() => setDraft(q)}
+              >
+                {q}
+              </button>
+            ))}
+          </div>
+        )}
 
         <form className="health-composer" onSubmit={sendMessage}>
           <label className="sr-only" htmlFor="health-message">Ask Aegis Health</label>
@@ -147,7 +181,10 @@ export default function HealthFlow({ onBack }: HealthFlowProps) {
             rows={2}
             disabled={isSending}
           />
-          <button type="submit" disabled={isSending || !draft.trim()}>{isSending ? "Thinking..." : "Ask"}<span aria-hidden="true">&uarr;</span></button>
+          <button type="submit" disabled={isSending || !draft.trim()}>
+            {isSending ? "Thinking..." : "Ask"}
+            <Send size={13} aria-hidden="true" />
+          </button>
         </form>
       </section>
 

@@ -13,6 +13,13 @@ from groq import Groq
 from services.gemini_client import generate_gemini_text
 from services.mongo import ConversationTurn
 from services.ollama_client import generate_ollama_text, ollama_enabled
+from services.serpapi_client import (
+    format_crisis_support_context,
+    is_crisis_support_candidate,
+    search_crisis_support_web,
+    serpapi_enabled,
+)
+
 
 
 DEFAULT_MODEL = "openai/gpt-oss-120b"
@@ -472,13 +479,32 @@ def _current_immediate_danger(message: str) -> bool:
     )
 
 
-def _urgent_advisor_reply(message: str, history: list[ConversationTurn] | None = None) -> str:
+def _urgent_advisor_reply(
+    message: str,
+    history: list[ConversationTurn] | None = None,
+    crisis_results: list[Any] | None = None,
+) -> str:
     """Give direct, bounded guidance while responding to the current turn."""
 
     lowered = message.casefold()
     history = history or []
     if _is_creative_request(message):
         return _creative_fallback(message, history)
+
+    if is_crisis_support_candidate(message):
+        if crisis_results:
+            top = crisis_results[0]
+            return (
+                f"If you need safe shelter right now, verified official options include {top.title} ({top.link}). "
+                "You can also reach the Women Helpline at 181 or Emergency at 112 if you are in immediate danger. "
+                "Are you in a safe place away from harm at this moment?"
+            )
+        return (
+            "If you need safe emergency shelter right now in India, verified options include "
+            "Sakhi One Stop Centres across districts and Swadhar Greh short-stay shelter homes. "
+            "You can reach the 24/7 Women Helpline at 181, Tele-MANAS at 14416, or 112 if in immediate danger. "
+            "Are you in a safe place away from harm at this moment?"
+        )
     previous_user_text = " ".join(
         turn.get("content", "") for turn in history[-8:] if turn.get("role") == "user"
     ).casefold()
@@ -669,15 +695,36 @@ def _urgent_advisor_reply(message: str, history: list[ConversationTurn] | None =
     )
 
 
-def _local_reply(message: str, mode: SupportMode, history: list[ConversationTurn]) -> str:
+def _local_reply(
+    message: str,
+    mode: SupportMode,
+    history: list[ConversationTurn],
+    crisis_results: list[Any] | None = None,
+) -> str:
     if _is_creative_request(message):
         return _creative_fallback(message, history)
     if mode == "urgent":
-        return _urgent_advisor_reply(message, history)
+        return _urgent_advisor_reply(message, history, crisis_results)
 
     relationship_style = _requested_relationship_style(message)
     if relationship_style:
         return _relationship_fallback(relationship_style)
+
+    if is_crisis_support_candidate(message):
+        if crisis_results:
+            top = crisis_results[0]
+            return (
+                f"If you need a safe place to stay or crisis support right now, verified options include "
+                f"{top.title} ({top.link}). You can also reach the 24/7 Women Helpline at 181, "
+                "Tele-MANAS mental health support at 14416, or 112 if in immediate physical danger. "
+                "Are you in a safe place at this moment?"
+            )
+        return (
+            "If you need a safe place to stay or crisis support right now in India, verified options include "
+            "Sakhi One Stop Centres across districts and Swadhar Greh shelter homes. "
+            "You can reach the 24/7 Women Helpline at 181, Tele-MANAS mental health support at 14416, or 112 if in immediate physical danger. "
+            "Are you in a safe place at this moment?"
+        )
 
     lowered = message.casefold()
     recent = " ".join(turn.get("content", "") for turn in history[-6:]).casefold()
@@ -861,9 +908,14 @@ def _is_repetitive(reply: str, history: list[ConversationTurn]) -> bool:
     )
 
 
-def _context_guided_reply(message: str, mode: SupportMode, history: list[ConversationTurn]) -> CompanionReply:
+def _context_guided_reply(
+    message: str,
+    mode: SupportMode,
+    history: list[ConversationTurn],
+    crisis_results: list[Any] | None = None,
+) -> CompanionReply:
     return CompanionReply(
-        text=_local_reply(message, mode, history),
+        text=_local_reply(message, mode, history, crisis_results),
         source="safety-guided" if mode == "urgent" else "context-guided",
     )
 
@@ -909,6 +961,20 @@ def generate_companion_reply(
     if _is_positive_reaction(message):
         mode_guidance = (
             "The user is giving harmless positive feedback. Reply like a friend who is pleased it connected; do not refuse, moralize, or revive earlier danger context."
+        )
+
+    crisis_context = ""
+    crisis_results: list[Any] = []
+    if is_crisis_support_candidate(message) and serpapi_enabled():
+        crisis_results = search_crisis_support_web(message, max_results=2)
+        if crisis_results:
+            crisis_context = format_crisis_support_context(crisis_results)
+
+    if crisis_context:
+        mode_guidance += (
+            f"\n\nLive Verified Safe Haven / Crisis Resources:\n{crisis_context}\n"
+            "If the user is asking where to go or needs shelter/crisis help, gently share these verified "
+            "options and links with warmth, care, and practical clarity."
         )
     conversation = [{"role": "system", "content": system_prompt}]
     conversation.extend(history[-10:])
@@ -1039,7 +1105,7 @@ def generate_companion_reply(
 
     if not api_key:
         if support_mode in ("abuse", "monitored", "urgent") or post_emergency:
-            guided = _context_guided_reply(message, support_mode, history)
+            guided = _context_guided_reply(message, support_mode, history, crisis_results)
             if gemini_error:
                 return CompanionReply(
                     text=guided.text,
@@ -1052,10 +1118,10 @@ def generate_companion_reply(
             if gemini_error
             else "No online AI key is configured, so Aegis used its local companion response."
         )
-        return CompanionReply(text=_local_reply(message, support_mode, history), source="local-fallback", warning=warning)
+        return CompanionReply(text=_local_reply(message, support_mode, history, crisis_results), source="local-fallback", warning=warning)
 
     if support_mode in ("abuse", "monitored", "urgent") or post_emergency:
-        guided = _context_guided_reply(message, support_mode, history)
+        guided = _context_guided_reply(message, support_mode, history, crisis_results)
         provider = (
             f"Gemini, Groq, and Ollama were unavailable ({type(gemini_error).__name__}, {type(groq_error).__name__}, {type(ollama_error).__name__})."
             if gemini_error and groq_error and ollama_error
@@ -1064,10 +1130,10 @@ def generate_companion_reply(
         return CompanionReply(text=guided.text, source=guided.source, warning=f"{provider} Aegis used a context-guided response.")
 
     if support_mode in ("abuse", "monitored", "urgent") or post_emergency:
-        return _context_guided_reply(message, support_mode, history)
+        return _context_guided_reply(message, support_mode, history, crisis_results)
 
     return CompanionReply(
-        text=_local_reply(message, support_mode, history),
+        text=_local_reply(message, support_mode, history, crisis_results),
         source="local-fallback",
         warning="The configured AI providers returned an empty response, so Aegis used its local companion response.",
     )

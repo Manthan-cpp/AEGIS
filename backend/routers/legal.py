@@ -42,7 +42,7 @@ class LegalAskResponse(BaseModel):
     answer_source: str
     in_scope: bool
     citations: list[LegalCitation]
-    retrieval_source: Literal["atlas-vector", "local-cosine", "local-corpus", "not-configured"]
+    retrieval_source: Literal["atlas-vector", "local-cosine", "local-corpus", "not-configured", "serpapi-web", "hybrid-serpapi-corpus"]
     warning: str | None = None
 
 

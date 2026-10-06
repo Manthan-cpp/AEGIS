@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, Clock, MessageSquare, RefreshCw, Search, Send, Trash2 } from "lucide-react";
 import { SignInButton, SignUpButton, useAuth, useUser } from "@clerk/nextjs";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://127.0.0.1:8123";
@@ -55,10 +56,11 @@ function GuestMessagesFlow({ onBack }: { onBack: () => void }) {
   return (
     <section className="dm-flow" aria-labelledby="dm-title">
       <button className="back-link" type="button" onClick={onBack}>
-        <span aria-hidden="true">&larr;</span> Back to toolkit
+        <ArrowLeft size={14} aria-hidden="true" />
+        <span>Back to toolkit</span>
       </button>
       <div className="dm-guest-card">
-        <span className="dm-icon" aria-hidden="true">↔</span>
+        <span className="dm-icon" aria-hidden="true"><MessageSquare size={36} /></span>
         <p className="eyebrow">Private conversations</p>
         <h2 id="dm-title">Sign in to message someone safely.</h2>
         <p>
@@ -452,7 +454,8 @@ function AuthenticatedMessagesFlow({ onBack }: { onBack: () => void }) {
     <section className="dm-flow" aria-labelledby="dm-title">
       <div className="dm-heading-row">
         <button className="back-link" type="button" onClick={onBack}>
-          <span aria-hidden="true">&larr;</span> Back to toolkit
+          <ArrowLeft size={14} aria-hidden="true" />
+          <span>Back to toolkit</span>
         </button>
         <span className="dm-account-chip">@{username}</span>
       </div>
@@ -468,7 +471,9 @@ function AuthenticatedMessagesFlow({ onBack }: { onBack: () => void }) {
             <label htmlFor="dm-search">Find a username</label>
             <div className="dm-search-row">
               <input id="dm-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="e.g. isha" maxLength={64} />
-              <button className="dm-small-button" type="submit">Search</button>
+              <button className="dm-small-button" type="submit">
+                <Search size={13} aria-hidden="true" /> Search
+              </button>
             </div>
           </form>
           {results.length > 0 && (
@@ -481,7 +486,12 @@ function AuthenticatedMessagesFlow({ onBack }: { onBack: () => void }) {
               ))}
             </div>
           )}
-          <div className="dm-list-heading"><span>Your conversations</span><button type="button" onClick={() => void loadConversations()} aria-label="Refresh conversations">↻</button></div>
+          <div className="dm-list-heading">
+            <span>Your conversations</span>
+            <button type="button" onClick={() => void loadConversations()} aria-label="Refresh conversations">
+              <RefreshCw size={12} aria-hidden="true" />
+            </button>
+          </div>
           {isLoading && <p className="dm-muted">Loading…</p>}
           {!isLoading && conversations.length === 0 && <p className="dm-muted">No private conversations yet.</p>}
           <div className="dm-conversation-list">
@@ -507,7 +517,8 @@ function AuthenticatedMessagesFlow({ onBack }: { onBack: () => void }) {
                 <div><strong>{selected.recipient.display_name}</strong><small>@{selected.recipient.username}</small></div>
                 <div className="dm-conversation-tools">
                   <button className={`dm-tool-button ${selected.disappearing_enabled ? "is-active" : ""}`} type="button" onClick={() => setIsSettingsOpen((current) => !current)}>
-                    {selected.disappearing_enabled ? `${disappearingLabel(selected.disappearing_seconds)} disappearing` : "Disappearing"}
+                    <Clock size={12} aria-hidden="true" />
+                    <span>{selected.disappearing_enabled ? `${disappearingLabel(selected.disappearing_seconds)} disappearing` : "Disappearing"}</span>
                   </button>
                   <button className={`dm-tool-button ${selectionMode ? "is-active" : ""}`} type="button" onClick={() => {
                     setSelectionMode((current) => !current);
@@ -545,7 +556,8 @@ function AuthenticatedMessagesFlow({ onBack }: { onBack: () => void }) {
                 <div className="dm-selection-toolbar" role="toolbar" aria-label="Selected messages">
                   <span>{selectedMessageIds.length} selected</span>
                   <button className="dm-delete-button" type="button" onClick={() => void deleteSelectedMessages()} disabled={isDeleting || selectedMessageIds.length === 0}>
-                    {isDeleting ? "Deleting…" : "Delete selected"}
+                    <Trash2 size={12} aria-hidden="true" />
+                    <span>{isDeleting ? "Deleting…" : "Delete selected"}</span>
                   </button>
                 </div>
               )}
@@ -571,11 +583,18 @@ function AuthenticatedMessagesFlow({ onBack }: { onBack: () => void }) {
               <form className="dm-composer" onSubmit={sendMessage}>
                 <label className="sr-only" htmlFor="dm-message">Write a private message</label>
                 <textarea id="dm-message" value={draft} onChange={(event) => setDraft(event.target.value)} placeholder="Write a private message…" maxLength={2_000} rows={3} />
-                <button className="dm-primary-button" type="submit" disabled={isSending || !draft.trim()}>{isSending ? "Sending…" : "Send message"}</button>
+                <button className="dm-primary-button" type="submit" disabled={isSending || !draft.trim()}>
+                  {isSending ? "Sending…" : "Send message"}
+                  <Send size={13} aria-hidden="true" />
+                </button>
               </form>
             </>
           ) : (
-            <div className="dm-empty-state"><span className="dm-icon" aria-hidden="true">↔</span><h3>Choose a conversation</h3><p>Search for a signed-in Aegis user to begin.</p></div>
+            <div className="dm-empty-state">
+              <span className="dm-icon" aria-hidden="true"><MessageSquare size={36} /></span>
+              <h3>Choose a conversation</h3>
+              <p>Search for a signed-in Aegis user to begin.</p>
+            </div>
           )}
         </div>
       </div>

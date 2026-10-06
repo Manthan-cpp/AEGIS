@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useRef, useState } from "react";
 import LiveCompanionVoice from "./live-companion-voice";
+import { BreathingGuide } from "../../components/motion/breathing-guide";
+import { ArrowLeft, Sparkles, Send, Mic, Volume2, VolumeX, Wind, Phone, ExternalLink, Copy, Check, Trash2 } from "lucide-react";
 
 type CompanionFlowProps = {
   onBack: () => void;
@@ -124,6 +126,7 @@ export default function CompanionFlow({ onBack }: CompanionFlowProps) {
   const [urgentMessage, setUrgentMessage] = useState<string | null>(null);
   const [isSummaryGenerating, setIsSummaryGenerating] = useState(false);
   const [isSummaryCopied, setIsSummaryCopied] = useState(false);
+  const [showBreathing, setShowBreathing] = useState(false);
   const sessionId = useRef("");
   const messageList = useRef<HTMLDivElement>(null);
 
@@ -303,7 +306,7 @@ export default function CompanionFlow({ onBack }: CompanionFlowProps) {
   return (
     <section className="companion-flow" aria-labelledby="companion-title">
       <button className="back-link" type="button" onClick={onBack}>
-        <span aria-hidden="true">&larr;</span> Back to toolkit
+        <span aria-hidden="true"><ArrowLeft size={14} /></span> Back to toolkit
       </button>
 
       <div className="companion-heading">
@@ -324,19 +327,48 @@ export default function CompanionFlow({ onBack }: CompanionFlowProps) {
             <p className="companion-voice-hint">You can also talk with Aegis live.</p>
           </div>
           <div className="companion-panel-actions">
-            <button className="live-companion-launch" type="button" onClick={() => setIsVoiceOpen(true)} disabled={isVoiceOpen}>
-              Start live voice
+            <button
+              className="listen-button"
+              type="button"
+              onClick={() => setShowBreathing((s) => !s)}
+              aria-label={showBreathing ? "Hide breathing guide" : "Open breathing guide"}
+              style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
+            >
+              <Wind size={13} /> Breathe
+            </button>
+            <button
+              className="live-companion-launch"
+              type="button"
+              onClick={() => setIsVoiceOpen(true)}
+              disabled={isVoiceOpen}
+              style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
+            >
+              <Mic size={13} /> Start live voice
             </button>
             <button
               className="listen-button"
               type="button"
               onClick={() => (isSpeaking ? stopSpeaking() : lastAssistantMessage && speak(lastAssistantMessage.text))}
               disabled={!lastAssistantMessage}
+              style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}
             >
-              {isSpeaking ? "Stop reading" : "Read aloud"}
+              {isSpeaking ? (
+                <>
+                  <VolumeX size={13} /> Stop reading
+                  <span className="reading-waveform" aria-hidden="true"><span /><span /><span /></span>
+                </>
+              ) : (
+                <>
+                  <Volume2 size={13} /> Read aloud
+                </>
+              )}
             </button>
           </div>
         </div>
+
+        {showBreathing && (
+          <BreathingGuide onClose={() => setShowBreathing(false)} variant="floating" />
+        )}
 
         {isVoiceOpen && (
           <LiveCompanionVoice chatSummary={buildVoiceContext(messages)} onClose={() => setIsVoiceOpen(false)} />
@@ -347,9 +379,9 @@ export default function CompanionFlow({ onBack }: CompanionFlowProps) {
             <strong>Immediate support</strong>
             <p>{urgentMessage}</p>
             <div>
-              <a href="tel:112">Call 112</a>
-              <a href="tel:181">Women&apos;s helpline 181</a>
-              <a href="https://112.gov.in/" target="_blank" rel="noreferrer">India emergency support</a>
+              <a href="tel:112"><Phone size={13} /> Call 112</a>
+              <a href="tel:181"><Phone size={13} /> Women&apos;s helpline 181</a>
+              <a href="https://112.gov.in/" target="_blank" rel="noreferrer"><ExternalLink size={13} /> India emergency support</a>
             </div>
           </aside>
         )}
@@ -357,7 +389,7 @@ export default function CompanionFlow({ onBack }: CompanionFlowProps) {
         <div className="companion-messages" ref={messageList} data-lenis-prevent aria-live="polite">
           {messages.map((message) => (
             <div className={`chat-row chat-row-${message.role}`} key={message.id}>
-              {message.role === "assistant" && <span className="chat-avatar" aria-hidden="true">A</span>}
+              {message.role === "assistant" && <span className="chat-avatar" aria-hidden="true"><Sparkles size={14} /></span>}
               <div className={`chat-bubble chat-bubble-${message.role}`}>
                 <p>{message.text}</p>
                 {message.role === "assistant" && message.source && (
@@ -380,7 +412,7 @@ export default function CompanionFlow({ onBack }: CompanionFlowProps) {
           ))}
           {isSending && (
             <div className="chat-row chat-row-assistant" aria-label="Aegis is thinking">
-              <span className="chat-avatar" aria-hidden="true">A</span>
+              <span className="chat-avatar" aria-hidden="true"><Sparkles size={14} /></span>
               <div className="chat-bubble chat-bubble-assistant chat-typing"><span /><span /><span /></div>
             </div>
           )}
@@ -397,9 +429,8 @@ export default function CompanionFlow({ onBack }: CompanionFlowProps) {
             rows={2}
             disabled={isSending}
           />
-          <button type="submit" disabled={isSending || !draft.trim()}>
-            {isSending ? "Sending..." : "Send"}
-            {!isSending && <span aria-hidden="true">&uarr;</span>}
+          <button type="submit" disabled={isSending || !draft.trim()} style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+            {isSending ? "Sending..." : <>Send <Send size={13} aria-hidden="true" /></>}
           </button>
         </form>
 
@@ -410,9 +441,9 @@ export default function CompanionFlow({ onBack }: CompanionFlowProps) {
               type="button"
               onClick={copySessionSummary}
               disabled={isSending || isSummaryGenerating || !messages.some((message) => message.role === "user")}
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
             >
-              {isSummaryGenerating ? "Preparing summary..." : isSummaryCopied ? "Summary copied" : "Copy session summary"}
-              <span aria-hidden="true">&rarr;</span>
+              {isSummaryGenerating ? "Preparing summary..." : isSummaryCopied ? <><Check size={14} /> Summary copied</> : <><Copy size={14} /> Copy session summary</>}
             </button>
             <small>Groq turns your messages into a clear handoff summary that you can paste into Email Support or Trusted Caller.</small>
           </div>
@@ -440,7 +471,10 @@ export default function CompanionFlow({ onBack }: CompanionFlowProps) {
             </small>
           </span>
         </label>
-        <button className="clear-memory-button" type="button" onClick={clearMemory}>Clear saved memory</button>
+        <button className="clear-memory-button" type="button" onClick={clearMemory} style={{ display: "inline-flex", alignItems: "center", gap: "5px" }}>
+          <Trash2 size={12} aria-hidden="true" />
+          <span>Clear saved memory</span>
+        </button>
       </section>
 
       {error && <p className="companion-error" role="alert">{error}</p>}

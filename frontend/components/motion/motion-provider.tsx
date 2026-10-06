@@ -91,7 +91,16 @@ function MotionCanvas({ children, reduced }: MotionProviderProps & { reduced: bo
     return () => context.revert();
   }, [reduced]);
 
-  return <div ref={rootRef} className="aegis-motion-canvas">{children}</div>;
+  return (
+    <div ref={rootRef} className="aegis-motion-canvas">
+      <div className="aegis-aurora-background" aria-hidden="true">
+        <div className="aegis-aurora-orb orb-1" />
+        <div className="aegis-aurora-orb orb-2" />
+        <div className="aegis-aurora-orb orb-3" />
+      </div>
+      {children}
+    </div>
+  );
 }
 
 export default function MotionProvider({ children }: MotionProviderProps) {

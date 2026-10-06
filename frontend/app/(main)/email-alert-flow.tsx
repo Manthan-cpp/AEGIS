@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, Check, Mail, Send, Trash2 } from "lucide-react";
 
 type EmailAlertFlowProps = {
   onBack: () => void;
@@ -240,7 +241,8 @@ export default function EmailAlertFlow({ onBack }: EmailAlertFlowProps) {
   return (
     <section className="email-alert-flow" aria-labelledby="email-alert-title">
       <button className="back-link" type="button" onClick={onBack} disabled={isSending}>
-        <span aria-hidden="true">&larr;</span> Back to toolkit
+        <ArrowLeft size={14} aria-hidden="true" />
+        <span>Back to toolkit</span>
       </button>
 
       <div className="email-alert-heading">
@@ -249,7 +251,9 @@ export default function EmailAlertFlow({ onBack }: EmailAlertFlowProps) {
           <h2 id="email-alert-title">Put the important details in one place.</h2>
           <p>Send a clear, consented summary to someone who may be able to help. You choose exactly what to include.</p>
         </div>
-        <div className="email-alert-orb" aria-hidden="true"><span>✉</span></div>
+        <div className="email-alert-orb" aria-hidden="true">
+          <Mail size={22} />
+        </div>
       </div>
 
       <form className="email-alert-panel" onSubmit={sendEmail}>
@@ -315,17 +319,20 @@ export default function EmailAlertFlow({ onBack }: EmailAlertFlowProps) {
 
         <label className="email-alert-confirmation">
           <input type="checkbox" checked={confirmation} onChange={(event) => setConfirmation(event.target.checked)} disabled={isSending} />
-          <span className="email-alert-check" aria-hidden="true">✓</span>
+          <span className="email-alert-check" aria-hidden="true">
+            <Check size={12} />
+          </span>
           <span>I have checked the details and want Aegis to send this email.</span>
         </label>
 
         <div className="email-alert-actions">
           <button className="email-alert-send" type="submit" disabled={!canSend || isSending}>
             {isSending ? "Sending email..." : "Send help email"}
-            {!isSending && <span aria-hidden="true">&rarr;</span>}
+            {!isSending && <Send size={13} aria-hidden="true" />}
           </button>
           <button className="email-alert-clear" type="button" onClick={() => { setSituation(""); setInstructions(""); setChatSummary(""); setNotice(null); setError(null); }} disabled={isSending}>
-            Clear message
+            <Trash2 size={13} aria-hidden="true" />
+            <span>Clear message</span>
           </button>
         </div>
         <p className="email-alert-note">Email is not an emergency channel. Share only what is safe, especially if your device or messages are monitored.</p>

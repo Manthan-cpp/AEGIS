@@ -78,3 +78,80 @@ export function TextReveal({ children, className = "", delay = 0, as = "div" }: 
     </>
   );
 }
+
+type WordRevealProps = {
+  text: string;
+  className?: string;
+  delay?: number;
+  as?: "h1" | "h2" | "h3" | "p" | "span" | "div";
+};
+
+export function WordReveal({ text, className = "", delay = 0, as = "h1" }: WordRevealProps) {
+  const containerRef = useRef<HTMLElement | null>(null);
+  const words = text.split(" ");
+
+  useLayoutEffect(() => {
+    if (!containerRef.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const context = gsap.context(() => {
+      const wordSpans = containerRef.current?.querySelectorAll(".word-reveal-token");
+      if (!wordSpans?.length) return;
+
+      gsap.fromTo(
+        wordSpans,
+        { autoAlpha: 0, y: 16, filter: "blur(5px)" },
+        {
+          autoAlpha: 1,
+          y: 0,
+          filter: "blur(0px)",
+          duration: 0.72,
+          delay,
+          stagger: 0.045,
+          ease: "power2.out",
+          clearProps: "transform,filter",
+        },
+      );
+    }, containerRef);
+
+    return () => context.revert();
+  }, [delay]);
+
+  const Tag = as;
+  return (
+    <Tag ref={(node) => { containerRef.current = node; }} className={`word-reveal-container ${className}`}>
+      {words.map((word, i) => (
+        <span key={`${word}-${i}`} className="word-reveal-token" style={{ display: "inline-block", marginRight: "0.28em" }}>
+          {word}
+        </span>
+      ))}
+    </Tag>
+  );
+}
+
+export function GentleFade({ children, className = "", delay = 0 }: RevealProps) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!ref.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const context = gsap.context(() => {
+      gsap.fromTo(
+        ref.current,
+        { autoAlpha: 0, scale: 0.98 },
+        {
+          autoAlpha: 1,
+          scale: 1,
+          duration: 0.85,
+          delay,
+          ease: "power2.out",
+          clearProps: "transform",
+        },
+      );
+    }, ref);
+
+    return () => context.revert();
+  }, [delay]);
+
+  return <div ref={ref} className={className}>{children}</div>;
+}
+
