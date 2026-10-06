@@ -234,8 +234,8 @@ A specialized, authenticated interface built for NGOs, trusted contacts, and cri
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Manthan-cpp/AEGIS-SerpApi-Integrated.git
-cd AEGIS-SerpApi-Integrated
+git clone https://github.com/Manthan-cpp/Aegis.git
+cd Aegis
 ```
 
 ---
@@ -340,6 +340,13 @@ python -m unittest discover -s tests
 2. You will be greeted by the **Stealth Calculator**.
 3. Type `2580` and press `=` to unlock the Aegis Sanctuary.
 4. Press `Escape` at any time to test the instant sub-16ms panic exit.
+
+## 👥 The Team
+
+* **[Manthan Jaiswal](https://github.com/Manthan-cpp)** — Founder, Leader & Backend Developer
+* **[Debjeet Mazumder](https://github.com/KingDev4522)** — Co-Founder, Backend Architect & Backend Co-Developer
+* **[Debadrita Baksi](https://github.com/debadritabaksi)** — Frontend Co-Developer & UI/UX Architect
+* **[Ankit Gupta](https://github.com/ankitgupta91412-sys)** — Frontend Co-Developer & Design Systems Engineer
 
 ---
 
